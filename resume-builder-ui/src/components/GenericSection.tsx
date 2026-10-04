@@ -20,8 +20,7 @@ interface Section {
  * card learns nothing from it, so each list type says what belongs in it and
  * what a good entry looks like. Keyed by section type.
  */
-const parseBulkItems = (input: string): string[] =>
-  input.split(/[,\n]/).map((item) => item.trim()).filter(Boolean);
+
 
 const LIST_EMPTY_COPY: Record<string, { headline: string; hint: string }> = {
   "bulleted-list": {
@@ -36,6 +35,15 @@ const LIST_EMPTY_COPY: Record<string, { headline: string; hint: string }> = {
     headline: "No items yet.",
     hint: "One item per line. They lay out in columns on the PDF, so short entries read best.",
   },
+};
+
+const parseBulkItems = (input: string): string[] => {
+  const separator = input.includes("\n") ? /\r?\n/ : /,/;
+
+  return input
+    .split(separator)
+    .map((item) => item.trim())
+    .filter(Boolean);
 };
 
 interface GenericSectionProps {
@@ -374,7 +382,7 @@ const GenericSection: React.FC<GenericSectionProps> = ({
             {isBulkAdding && (
               <form onSubmit={handleBulkAdd} className="mt-2 space-y-3">
                 <label className="block text-sm font-medium text-ink" htmlFor={bulkItemsId}>
-                  Paste items separated by commas or new lines (commas separate items)
+                  Paste items separated by commas or new lines
                 </label>
                 <textarea
                   id={bulkItemsId}

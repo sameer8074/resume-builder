@@ -46,7 +46,7 @@ describe.each(["inline-list", "dynamic-column-list"])(
 
       fireEvent.click(screen.getByRole("button", { name: "Add multiple items" }));
       fireEvent.change(screen.getByRole("textbox", { name: /paste items/i }), {
-        target: { value: " Python, JavaScript, ,\n SQL  " },
+        target: { value: " Python\nJavaScript\n\n SQL  " },
       });
       fireEvent.click(screen.getByRole("button", { name: "Add items" }));
 
@@ -56,6 +56,39 @@ describe.each(["inline-list", "dynamic-column-list"])(
         content: ["Existing skill", "Python", "JavaScript", "SQL"],
       });
       expect(screen.queryByRole("textbox", { name: /paste items/i })).not.toBeInTheDocument();
+    });
+
+    it("splits comma-separated items when there are no newlines", () => {
+      const onUpdate = vi.fn();
+
+      render(
+        <GenericSection
+          section={{ name: "Key Skills", type, content: [] }}
+          onUpdate={onUpdate}
+          onEditTitle={vi.fn()}
+          onSaveTitle={vi.fn()}
+          onCancelTitle={vi.fn()}
+          onDelete={vi.fn()}
+          isEditing={false}
+          temporaryTitle=""
+          setTemporaryTitle={vi.fn()}
+        />,
+        { wrapper: DndWrapper }
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: "Add multiple items" }));
+
+      fireEvent.change(screen.getByRole("textbox", { name: /paste items/i }), {
+        target: { value: "Python, JavaScript, C++" },
+      });
+
+      fireEvent.click(screen.getByRole("button", { name: "Add items" }));
+
+      expect(onUpdate).toHaveBeenCalledWith({
+        name: "Key Skills",
+        type,
+        content: ["Python", "JavaScript", "C++"],
+      });
     });
 
     it("keeps the single-item control and does not add blank bulk input", () => {
@@ -80,6 +113,41 @@ describe.each(["inline-list", "dynamic-column-list"])(
       expect(screen.getByRole("button", { name: "Add items" })).toBeDisabled();
       fireEvent.click(screen.getByRole("button", { name: "Cancel bulk add" }));
       expect(onUpdate).not.toHaveBeenCalled();
+    });
+
+    it("preserves commas inside an item when adding newline-separated items", () => {
+      const onUpdate = vi.fn();
+
+      render(
+        <GenericSection
+          section={{ name: "Key Skills", type, content: [] }}
+          onUpdate={onUpdate}
+          onEditTitle={vi.fn()}
+          onSaveTitle={vi.fn()}
+          onCancelTitle={vi.fn()}
+          onDelete={vi.fn()}
+          isEditing={false}
+          temporaryTitle=""
+          setTemporaryTitle={vi.fn()}
+        />,
+        { wrapper: DndWrapper }
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: "Add multiple items" }));
+
+      fireEvent.change(screen.getByRole("textbox", { name: /paste items/i }), {
+        target: {
+          value: "Microsoft Office (Word, Excel)\nPython",
+        },
+      });
+
+      fireEvent.click(screen.getByRole("button", { name: "Add items" }));
+
+      expect(onUpdate).toHaveBeenCalledWith({
+        name: "Key Skills",
+        type,
+        content: ["Microsoft Office (Word, Excel)", "Python"],
+      });
     });
   }
 );
